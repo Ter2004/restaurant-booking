@@ -171,7 +171,7 @@ jobs:
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
 
   # ─────────────────────────────────────────────────────────
-  # 4. DEPLOY — Railway webhook
+  # 4. DEPLOY — Railway CLI
   # ─────────────────────────────────────────────────────────
   deploy:
     name: Deploy to Railway
@@ -180,11 +180,20 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
-      - name: Trigger Railway deployment
-        run: |
-          curl -s -X POST \
-            -H "Content-Type: application/json" \
-            "${{ secrets.RAILWAY_DEPLOY_WEBHOOK }}"
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Redeploy backend
+        run: railway redeploy --service restaurant-booking --yes
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+
+      - name: Redeploy frontend
+        run: railway redeploy --service divine-success --yes
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
 
       - name: Deployment triggered
         run: echo "Railway deployment triggered for commit ${{ github.sha }}"
