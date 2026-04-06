@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from supabase import Client
 
 from app.dependencies import get_supabase
-from app.middleware.auth import get_current_user, require_owner
+from app.middleware.auth import require_owner
 from app.models.schemas import RestaurantCreate, RestaurantResponse, RestaurantUpdate
 
 router = APIRouter()
