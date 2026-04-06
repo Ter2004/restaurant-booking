@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from supabase import Client
 
 from app.dependencies import get_supabase
@@ -6,10 +8,12 @@ from app.middleware.auth import get_current_user
 from app.models.schemas import AuthResponse, LoginRequest, ProfileResponse, RegisterRequest
 
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
 
 @router.post("/register", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
-async def register(payload: RegisterRequest, db: Client = Depends(get_supabase)):
+@limiter.limit("3/minute")
+async def register(request: Request, payload: RegisterRequest, db: Client = Depends(get_supabase)):
     try:
         result = db.auth.sign_up(
             {
@@ -35,7 +39,8 @@ async def register(payload: RegisterRequest, db: Client = Depends(get_supabase))
 
 
 @router.post("/login", response_model=AuthResponse)
-async def login(payload: LoginRequest, db: Client = Depends(get_supabase)):
+@limiter.limit("5/minute")
+async def login(request: Request, payload: LoginRequest, db: Client = Depends(get_supabase)):
     try:
         result = db.auth.sign_in_with_password(
             {"email": payload.email, "password": payload.password}
