@@ -6,7 +6,6 @@ import { Star, Users, ArrowRight, Search, ChefHat, CalendarCheck, Smile } from "
 import { supabase } from "@/lib/supabase";
 import { api } from "@/lib/api";
 import type { Restaurant } from "@/types";
-import { mockRestaurants } from "@/lib/mockData";
 import { cuisineEmoji, cn } from "@/lib/utils";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -25,16 +24,11 @@ export default function HomePage() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setIsLoggedIn(!!data.user);
-      if (data.user) {
-        api.restaurants.list()
-          .then(setRestaurants)
-          .catch(() => setRestaurants(mockRestaurants))
-          .finally(() => setLoading(false));
-      } else {
-        setRestaurants(mockRestaurants);
-        setLoading(false);
-      }
     });
+    api.restaurants.list()
+      .then(setRestaurants)
+      .catch(() => setRestaurants([]))
+      .finally(() => setLoading(false));
   }, []);
 
   const filtered = restaurants.filter((r) => {
