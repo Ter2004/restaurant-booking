@@ -1,16 +1,25 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 import { api, Restaurant } from "@/lib/api";
 
-async function getRestaurants(): Promise<Restaurant[]> {
-  try {
-    return await api.restaurants.list();
-  } catch {
-    return [];
-  }
-}
+export default function HomePage() {
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-export default async function HomePage() {
-  const restaurants = await getRestaurants();
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) {
+        setIsLoggedIn(true);
+        api.restaurants.list().then(setRestaurants).finally(() => setLoading(false));
+      } else {
+        setLoading(false);
+      }
+    });
+  }, []);
 
   return (
     <main>
@@ -32,15 +41,31 @@ export default async function HomePage() {
 
       {/* Restaurant Grid */}
       <section className="max-w-7xl mx-auto px-4 py-12">
-        <h2 className="text-2xl font-bold mb-6">Featured Restaurants</h2>
-        {restaurants.length === 0 ? (
-          <p className="text-gray-500">No restaurants available yet.</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {restaurants.map((r) => (
-              <RestaurantCard key={r.id} restaurant={r} />
-            ))}
+        {!isLoggedIn ? (
+          <div className="text-center py-16 text-gray-500">
+            <p className="text-lg font-medium mb-2">Please log in to browse restaurants</p>
+            <Link
+              href="/auth/login"
+              className="inline-block mt-2 bg-brand-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-brand-700 transition"
+            >
+              Log In
+            </Link>
           </div>
+        ) : loading ? (
+          <p className="text-gray-400">Loading…</p>
+        ) : (
+          <>
+            <h2 className="text-2xl font-bold mb-6">Featured Restaurants</h2>
+            {restaurants.length === 0 ? (
+              <p className="text-gray-500">No restaurants available yet.</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {restaurants.map((r) => (
+                  <RestaurantCard key={r.id} restaurant={r} />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </section>
     </main>

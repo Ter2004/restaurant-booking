@@ -129,6 +129,15 @@ async def create_booking(
     current_user: dict = Depends(get_current_user),
     db: Client = Depends(get_supabase),
 ):
+    # Check booking is within restaurant hours
+    rest = db.table("restaurants").select("opening_time,closing_time").eq("id", payload.restaurant_id).single().execute()
+    if rest.data:
+        if payload.start_time < rest.data["opening_time"] or payload.end_time > rest.data["closing_time"]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Booking time must be within restaurant hours ({rest.data['opening_time']} – {rest.data['closing_time']})",
+            )
+
     _check_conflict(
         db,
         payload.table_id,

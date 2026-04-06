@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from typing import Optional
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, model_validator
 
 
 # ── Auth ─────────────────────────────────────────────────────────────────────
@@ -135,6 +135,12 @@ class BookingCreate(BaseModel):
     end_time: str    # "HH:MM"
     party_size: int = Field(ge=1)
     special_requests: Optional[str] = None
+
+    @model_validator(mode="after")
+    def end_after_start(self) -> "BookingCreate":
+        if self.end_time <= self.start_time:
+            raise ValueError("end_time must be after start_time")
+        return self
 
 
 class BookingUpdate(BaseModel):

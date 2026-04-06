@@ -33,6 +33,8 @@ function NewBookingForm() {
     }
   }, [form.restaurant_id]);
 
+  const selectedRestaurant = restaurants.find((r) => r.id === form.restaurant_id);
+
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) {
@@ -43,6 +45,23 @@ function NewBookingForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (form.end_time <= form.start_time) {
+      setError("End time must be after start time");
+      return;
+    }
+
+    if (selectedRestaurant) {
+      if (form.start_time < selectedRestaurant.opening_time) {
+        setError(`Restaurant opens at ${selectedRestaurant.opening_time}`);
+        return;
+      }
+      if (form.end_time > selectedRestaurant.closing_time) {
+        setError(`Restaurant closes at ${selectedRestaurant.closing_time}`);
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       await api.bookings.create({ ...form, party_size: Number(form.party_size) });
@@ -71,6 +90,11 @@ function NewBookingForm() {
               <option key={r.id} value={r.id}>{r.name} — {r.city}</option>
             ))}
           </select>
+          {selectedRestaurant && (
+            <p className="text-xs text-gray-400 mt-1">
+              Hours: {selectedRestaurant.opening_time} – {selectedRestaurant.closing_time}
+            </p>
+          )}
         </div>
 
         <div>
@@ -107,12 +131,16 @@ function NewBookingForm() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
             <input name="start_time" type="time" required value={form.start_time}
               onChange={handleChange}
+              min={selectedRestaurant?.opening_time}
+              max={selectedRestaurant?.closing_time}
               className="w-full border rounded-lg px-3 py-2 text-sm" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
             <input name="end_time" type="time" required value={form.end_time}
               onChange={handleChange}
+              min={form.start_time || selectedRestaurant?.opening_time}
+              max={selectedRestaurant?.closing_time}
               className="w-full border rounded-lg px-3 py-2 text-sm" />
           </div>
         </div>
