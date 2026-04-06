@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api, Restaurant, Table } from "@/lib/api";
 
-export default function NewBookingPage() {
+function NewBookingForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedRestaurantId = searchParams.get("restaurant_id") ?? "";
@@ -130,5 +130,13 @@ export default function NewBookingPage() {
         </button>
       </form>
     </div>
+  );
+}
+
+export default function NewBookingPage() {
+  return (
+    <Suspense>
+      <NewBookingForm />
+    </Suspense>
   );
 }
