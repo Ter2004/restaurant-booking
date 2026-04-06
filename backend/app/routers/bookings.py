@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from supabase import Client
 
 from app.dependencies import get_supabase
-from app.middleware.auth import get_current_user
+from app.middleware.auth import get_current_user, require_owner
 from app.models.schemas import BookingCreate, BookingResponse, BookingUpdate
 
 router = APIRouter()
@@ -36,6 +36,30 @@ def _check_conflict(
             status_code=status.HTTP_409_CONFLICT,
             detail="Table is already booked for the requested time slot",
         )
+
+
+@router.get("/owner", response_model=list[BookingResponse])
+async def list_owner_bookings(
+    restaurant_id: str | None = Query(default=None),
+    status_filter: str | None = Query(default=None, alias="status"),
+    current_user: dict = Depends(require_owner),
+    db: Client = Depends(get_supabase),
+):
+    """List all bookings for restaurants owned by the current user."""
+    # Get owner's restaurant IDs
+    owner_id = current_user["sub"]
+    restaurants = db.table("restaurants").select("id").eq("owner_id", owner_id).execute()
+    restaurant_ids = [r["id"] for r in restaurants.data]
+    if not restaurant_ids:
+        return []
+
+    query = db.table("bookings").select("*").in_("restaurant_id", restaurant_ids)
+    if restaurant_id:
+        query = query.eq("restaurant_id", restaurant_id)
+    if status_filter:
+        query = query.eq("status", status_filter)
+    result = query.order("booking_date", desc=True).execute()
+    return result.data
 
 
 @router.get("/", response_model=list[BookingResponse])

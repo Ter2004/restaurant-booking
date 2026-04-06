@@ -54,6 +54,10 @@ export const api = {
       const q = new URLSearchParams(params as Record<string, string>).toString();
       return apiFetch<Booking[]>(`/bookings/${q ? `?${q}` : ""}`);
     },
+    listOwner: (params?: { restaurant_id?: string; status?: string }) => {
+      const q = new URLSearchParams(params as Record<string, string>).toString();
+      return apiFetch<Booking[]>(`/bookings/owner${q ? `?${q}` : ""}`);
+    },
     get: (id: string) => apiFetch<Booking>(`/bookings/${id}`),
     create: (data: Partial<Booking>) =>
       apiFetch<Booking>("/bookings/", { method: "POST", body: JSON.stringify(data) }),

@@ -34,12 +34,20 @@ export default function OwnerDashboard() {
     <div className="max-w-5xl mx-auto px-4 py-10">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold">My Restaurants</h1>
-        <Link
-          href="/owner/restaurants/new"
-          className="bg-brand-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-brand-700 transition"
-        >
-          + Add Restaurant
-        </Link>
+        <div className="flex gap-3">
+          <Link
+            href="/owner/bookings"
+            className="border border-brand-600 text-brand-600 px-5 py-2 rounded-lg text-sm font-medium hover:bg-brand-50 transition"
+          >
+            View Bookings
+          </Link>
+          <Link
+            href="/owner/restaurants/new"
+            className="bg-brand-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-brand-700 transition"
+          >
+            + Add Restaurant
+          </Link>
+        </div>
       </div>
 
       {loading ? (
