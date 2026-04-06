@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, UtensilsCrossed, Mail, Lock } from "lucide-react";
@@ -12,6 +12,17 @@ import { useToast } from "@/components/ui/Toast";
 export default function LoginPage() {
   const router = useRouter();
   const { error: showError } = useToast();
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data.user) return;
+      const role = data.user.user_metadata?.role ?? "customer";
+      if (role === "owner") router.replace("/owner/dashboard");
+      else if (role === "admin") router.replace("/admin/dashboard");
+      else router.replace("/customer/dashboard");
+    });
+  }, [router]);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
