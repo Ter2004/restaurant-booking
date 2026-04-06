@@ -58,6 +58,8 @@ export const api = {
       const q = new URLSearchParams(params as Record<string, string>).toString();
       return apiFetch<Booking[]>(`/bookings/owner${q ? `?${q}` : ""}`);
     },
+    updateOwner: (id: string, data: Partial<Booking>) =>
+      apiFetch<Booking>(`/bookings/owner/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
     get: (id: string) => apiFetch<Booking>(`/bookings/${id}`),
     create: (data: Partial<Booking>) =>
       apiFetch<Booking>("/bookings/", { method: "POST", body: JSON.stringify(data) }),

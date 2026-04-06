@@ -62,6 +62,36 @@ async def list_owner_bookings(
     return result.data
 
 
+@router.patch("/owner/{booking_id}", response_model=BookingResponse)
+async def owner_update_booking(
+    booking_id: str,
+    payload: BookingUpdate,
+    current_user: dict = Depends(require_owner),
+    db: Client = Depends(get_supabase),
+):
+    """Allow owners to update status of bookings for their restaurants."""
+    existing = db.table("bookings").select("*").eq("id", booking_id).single().execute()
+    if not existing.data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
+    booking = existing.data
+
+    owner_id = current_user["sub"]
+    restaurants = db.table("restaurants").select("id").eq("owner_id", owner_id).execute()
+    restaurant_ids = {r["id"] for r in restaurants.data}
+    if booking["restaurant_id"] not in restaurant_ids:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+
+    if booking["status"] in ("completed", "cancelled"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot modify a {booking['status']} booking",
+        )
+
+    updates = payload.model_dump(exclude_none=True)
+    result = db.table("bookings").update(updates).eq("id", booking_id).execute()
+    return result.data[0]
+
+
 @router.get("/", response_model=list[BookingResponse])
 async def list_bookings(
     restaurant_id: str | None = Query(default=None),

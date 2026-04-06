@@ -31,7 +31,7 @@ export default function OwnerBookings() {
   }, [router]);
 
   async function handleStatus(id: string, newStatus: string) {
-    await api.bookings.update(id, { status: newStatus as Booking["status"] });
+    await api.bookings.updateOwner(id, { status: newStatus as Booking["status"] });
     setBookings((prev) => prev.map((b) => b.id === id ? { ...b, status: newStatus as Booking["status"] } : b));
   }
 
@@ -79,20 +79,36 @@ export default function OwnerBookings() {
                   {b.status}
                 </span>
                 {b.status === "pending" && (
-                  <button
-                    onClick={() => handleStatus(b.id, "confirmed")}
-                    className="text-sm bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700"
-                  >
-                    Confirm
-                  </button>
+                  <>
+                    <button
+                      onClick={() => handleStatus(b.id, "confirmed")}
+                      className="text-sm bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700"
+                    >
+                      Confirm
+                    </button>
+                    <button
+                      onClick={() => handleStatus(b.id, "cancelled")}
+                      className="text-sm bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
+                    >
+                      Cancel
+                    </button>
+                  </>
                 )}
                 {b.status === "confirmed" && (
-                  <button
-                    onClick={() => handleStatus(b.id, "completed")}
-                    className="text-sm bg-green-600 text-white px-3 py-1 rounded-lg hover:bg-green-700"
-                  >
-                    Complete
-                  </button>
+                  <>
+                    <button
+                      onClick={() => handleStatus(b.id, "completed")}
+                      className="text-sm bg-green-600 text-white px-3 py-1 rounded-lg hover:bg-green-700"
+                    >
+                      Complete
+                    </button>
+                    <button
+                      onClick={() => handleStatus(b.id, "cancelled")}
+                      className="text-sm bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
+                    >
+                      Cancel
+                    </button>
+                  </>
                 )}
               </div>
             </div>
