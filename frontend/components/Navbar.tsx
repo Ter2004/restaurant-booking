@@ -49,9 +49,14 @@ export default function Navbar() {
           {user ? (
             <>
               {user.role === "customer" && (
-                <Link href="/customer/dashboard" className="text-gray-600 hover:text-brand-600">
-                  My Bookings
-                </Link>
+                <>
+                  <Link href="/" className="text-gray-600 hover:text-brand-600">
+                    Restaurants
+                  </Link>
+                  <Link href="/customer/dashboard" className="text-gray-600 hover:text-brand-600">
+                    My Bookings
+                  </Link>
+                </>
               )}
               {(user.role === "owner" || user.role === "admin") && (
                 <Link href="/owner/dashboard" className="text-gray-600 hover:text-brand-600">

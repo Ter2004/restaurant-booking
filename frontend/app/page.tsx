@@ -31,16 +31,25 @@ export default function HomePage() {
         <p className="text-lg text-brand-100 mb-8">
           Discover top restaurants and reserve your spot in seconds.
         </p>
-        <Link
-          href="/auth/login"
-          className="bg-white text-brand-600 font-semibold px-8 py-3 rounded-full hover:bg-brand-50 transition"
-        >
-          Get Started
-        </Link>
+        {isLoggedIn ? (
+          <a
+            href="#restaurants"
+            className="bg-white text-brand-600 font-semibold px-8 py-3 rounded-full hover:bg-brand-50 transition"
+          >
+            Browse Restaurants
+          </a>
+        ) : (
+          <Link
+            href="/auth/login"
+            className="bg-white text-brand-600 font-semibold px-8 py-3 rounded-full hover:bg-brand-50 transition"
+          >
+            Get Started
+          </Link>
+        )}
       </section>
 
       {/* Restaurant Grid */}
-      <section className="max-w-7xl mx-auto px-4 py-12">
+      <section id="restaurants" className="max-w-7xl mx-auto px-4 py-12">
         {!isLoggedIn ? (
           <div className="text-center py-16 text-gray-400">
             <p className="text-base">Please log in to browse restaurants</p>
