@@ -1,6 +1,7 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from main import app
+from app.dependencies import get_supabase
 from app.middleware.auth import get_current_user
 
 
@@ -39,20 +40,20 @@ def test_create_booking_success(client):
     # Insert returns booking
     mock_db.table.return_value.insert.return_value.execute.return_value.data = [MOCK_BOOKING]
 
-    with patch("app.routers.bookings.get_supabase", return_value=mock_db):
-        app.dependency_overrides[get_current_user] = lambda: MOCK_USER
-        response = client.post(
-            "/bookings/",
-            json={
-                "restaurant_id": "rest-uuid-001",
-                "table_id": "table-uuid-001",
-                "booking_date": "2025-06-15",
-                "start_time": "19:00",
-                "end_time": "21:00",
-                "party_size": 2,
-            },
-        )
-        app.dependency_overrides.clear()
+    app.dependency_overrides[get_supabase] = lambda: mock_db
+    app.dependency_overrides[get_current_user] = lambda: MOCK_USER
+    response = client.post(
+        "/bookings/",
+        json={
+            "restaurant_id": "rest-uuid-001",
+            "table_id": "table-uuid-001",
+            "booking_date": "2025-06-15",
+            "start_time": "19:00",
+            "end_time": "21:00",
+            "party_size": 2,
+        },
+    )
+    app.dependency_overrides.clear()
 
     assert response.status_code == 201
 
@@ -64,10 +65,10 @@ def test_cancel_booking_success(client):
         {**MOCK_BOOKING, "status": "cancelled"}
     ]
 
-    with patch("app.routers.bookings.get_supabase", return_value=mock_db):
-        app.dependency_overrides[get_current_user] = lambda: MOCK_USER
-        response = client.delete("/bookings/booking-uuid-001")
-        app.dependency_overrides.clear()
+    app.dependency_overrides[get_supabase] = lambda: mock_db
+    app.dependency_overrides[get_current_user] = lambda: MOCK_USER
+    response = client.delete("/bookings/booking-uuid-001")
+    app.dependency_overrides.clear()
 
     assert response.status_code == 204
 
@@ -77,9 +78,9 @@ def test_cancel_booking_wrong_user(client):
     mock_db = MagicMock()
     mock_db.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value.data = other_user_booking
 
-    with patch("app.routers.bookings.get_supabase", return_value=mock_db):
-        app.dependency_overrides[get_current_user] = lambda: MOCK_USER
-        response = client.delete("/bookings/booking-uuid-001")
-        app.dependency_overrides.clear()
+    app.dependency_overrides[get_supabase] = lambda: mock_db
+    app.dependency_overrides[get_current_user] = lambda: MOCK_USER
+    response = client.delete("/bookings/booking-uuid-001")
+    app.dependency_overrides.clear()
 
     assert response.status_code == 403

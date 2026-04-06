@@ -1,6 +1,7 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from main import app
+from app.dependencies import get_supabase
 from app.middleware.auth import get_current_user
 
 
@@ -34,13 +35,13 @@ def test_get_me_returns_profile(client):
     mock_db = MagicMock()
     mock_db.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value.data = mock_profile
 
-    with patch("app.routers.auth.get_supabase", return_value=mock_db):
-        app.dependency_overrides[get_current_user] = lambda: {
-            "sub": "user-uuid-123",
-            "email": "test@example.com",
-        }
-        response = client.get("/auth/me")
-        app.dependency_overrides.clear()
+    app.dependency_overrides[get_supabase] = lambda: mock_db
+    app.dependency_overrides[get_current_user] = lambda: {
+        "sub": "user-uuid-123",
+        "email": "test@example.com",
+    }
+    response = client.get("/auth/me")
+    app.dependency_overrides.clear()
 
     assert response.status_code == 200
     assert response.json()["email"] == "test@example.com"
