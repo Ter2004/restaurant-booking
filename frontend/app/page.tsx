@@ -42,14 +42,8 @@ export default function HomePage() {
       {/* Restaurant Grid */}
       <section className="max-w-7xl mx-auto px-4 py-12">
         {!isLoggedIn ? (
-          <div className="text-center py-16 text-gray-500">
-            <p className="text-lg font-medium mb-2">Please log in to browse restaurants</p>
-            <Link
-              href="/auth/login"
-              className="inline-block mt-2 bg-brand-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-brand-700 transition"
-            >
-              Log In
-            </Link>
+          <div className="text-center py-16 text-gray-400">
+            <p className="text-base">Please log in to browse restaurants</p>
           </div>
         ) : loading ? (
           <p className="text-gray-400">Loading…</p>
