@@ -16,12 +16,12 @@ export default function OwnerDashboard() {
       if (!data.user) { router.push("/auth/login"); return; }
       const role = data.user.user_metadata?.role;
       if (role !== "owner" && role !== "admin") { router.push("/"); return; }
+      const userId = data.user.id;
+      api.restaurants.list().then((all) => {
+        setRestaurants(all.filter((r) => r.owner_id === userId));
+        setLoading(false);
+      }).catch(() => setLoading(false));
     });
-    // For owner: list their own restaurants via the API
-    api.restaurants.list().then((data) => {
-      setRestaurants(data);
-      setLoading(false);
-    }).catch(() => setLoading(false));
   }, [router]);
 
   async function handleDelete(id: string) {
