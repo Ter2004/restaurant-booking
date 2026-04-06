@@ -10,6 +10,7 @@ function NewBookingForm() {
   const searchParams = useSearchParams();
   const preselectedRestaurantId = searchParams.get("restaurant_id") ?? "";
 
+  const [authChecked, setAuthChecked] = useState(false);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [tables, setTables] = useState<Table[]>([]);
   const [form, setForm] = useState({
@@ -27,11 +28,13 @@ function NewBookingForm() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       if (!data.user) {
-        router.push(`/auth/login?redirect=/customer/bookings/new${preselectedRestaurantId ? `?restaurant_id=${preselectedRestaurantId}` : ""}`);
+        router.replace(`/auth/login`);
+      } else {
+        setAuthChecked(true);
+        api.restaurants.list().then(setRestaurants);
       }
     });
-    api.restaurants.list().then(setRestaurants);
-  }, [router, preselectedRestaurantId]);
+  }, [router]);
 
   useEffect(() => {
     if (form.restaurant_id) {
@@ -77,6 +80,9 @@ function NewBookingForm() {
       setLoading(false);
     }
   }
+
+  // Don't render the form until auth is confirmed
+  if (!authChecked) return null;
 
   return (
     <div className="max-w-lg mx-auto px-4 py-10">
