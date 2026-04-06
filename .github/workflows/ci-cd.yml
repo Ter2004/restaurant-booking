@@ -188,12 +188,14 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+        continue-on-error: true
 
       - name: Redeploy frontend
         run: railway redeploy --service divine-success --yes
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+        continue-on-error: true
 
       - name: Deployment triggered
         run: echo "Railway deployment triggered for commit ${{ github.sha }}"
