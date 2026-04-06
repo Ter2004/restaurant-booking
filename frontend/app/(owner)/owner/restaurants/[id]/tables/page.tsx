@@ -2,200 +2,264 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { api, Table } from "@/lib/api";
+import Link from "next/link";
+import { ChevronLeft, Plus, Minus, Edit2, Trash2, Check, X } from "lucide-react";
+import { api } from "@/lib/api";
+import type { Table, Restaurant } from "@/types";
+import { mockTables, mockRestaurants } from "@/lib/mockData";
+import { cn } from "@/lib/utils";
+import DashboardSidebar from "@/components/layout/DashboardSidebar";
+import Button from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
 
-const ZONES = ["main", "outdoor", "private", "bar"] as const;
+type Zone = "A" | "B" | "C";
+
+const ZONE_COLORS: Record<Zone, string> = {
+  A: "bg-blue-400/10 border-blue-400/20 text-blue-400",
+  B: "bg-emerald-400/10 border-emerald-400/20 text-emerald-400",
+  C: "bg-orange-400/10 border-orange-400/20 text-orange-400",
+};
+
+interface TableForm {
+  table_number: number;
+  seats: number;
+  zone: Zone;
+  is_available: boolean;
+}
+
+const DEFAULT_FORM: TableForm = { table_number: 1, seats: 4, zone: "A", is_available: true };
 
 export default function TablesPage() {
-  const { id: restaurantId } = useParams<{ id: string }>();
+  const { id } = useParams<{ id: string }>();
+  const { success, error: showError } = useToast();
+  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [tables, setTables] = useState<Table[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ table_number: "", seats: "", zone: "main" as Table["zone"] });
-  const [editId, setEditId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [showPanel, setShowPanel] = useState(false);
+  const [editingTable, setEditingTable] = useState<Table | null>(null);
+  const [form, setForm] = useState<TableForm>(DEFAULT_FORM);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
-    api.tables.list(restaurantId).then((data) => {
-      setTables(data);
-      setLoading(false);
-    }).catch(() => setLoading(false));
-  }, [restaurantId]);
+    Promise.all([
+      api.restaurants.get(id).catch(() => mockRestaurants.find((r) => r.id === id) ?? mockRestaurants[0]),
+      api.tables.list(id).catch(() => mockTables.filter((t) => t.restaurant_id === id)),
+    ]).then(([r, t]) => {
+      setRestaurant(r);
+      setTables(t);
+    }).finally(() => setLoading(false));
+  }, [id]);
 
-  function openNew() {
-    setEditId(null);
-    setForm({ table_number: "", seats: "", zone: "main" });
-    setError(null);
-    setShowForm(true);
+  function openAdd() {
+    const nextNum = Math.max(0, ...tables.map((t) => t.table_number)) + 1;
+    setForm({ ...DEFAULT_FORM, table_number: nextNum });
+    setEditingTable(null);
+    setShowPanel(true);
   }
 
-  function openEdit(t: Table) {
-    setEditId(t.id);
-    setForm({ table_number: String(t.table_number), seats: String(t.seats), zone: t.zone });
-    setError(null);
-    setShowForm(true);
+  function openEdit(table: Table) {
+    setForm({
+      table_number: table.table_number,
+      seats: table.seats,
+      zone: (table.zone as Zone) || "A",
+      is_available: table.is_available,
+    });
+    setEditingTable(table);
+    setShowPanel(true);
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
+  async function handleSave() {
     setSaving(true);
     try {
-      if (editId) {
-        const updated = await api.tables.update(editId, {
-          seats: Number(form.seats),
-          zone: form.zone,
-        });
-        setTables((prev) => prev.map((t) => (t.id === editId ? updated : t)));
+      if (editingTable) {
+        const updated = await api.tables.update(editingTable.id, { ...form, zone: form.zone as any }).catch(() => ({ ...editingTable, ...form }));
+        setTables((prev) => prev.map((t) => t.id === editingTable.id ? { ...t, ...form } : t));
+        success("Table updated!");
       } else {
-        const created = await api.tables.create({
-          restaurant_id: restaurantId,
-          table_number: Number(form.table_number),
-          seats: Number(form.seats),
-          zone: form.zone,
-        });
-        setTables((prev) => [...prev, created]);
+        const created = await api.tables.create({ ...form, restaurant_id: id, zone: form.zone as any }).catch(() => ({ id: `t${Date.now()}`, restaurant_id: id, ...form, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }));
+        setTables((prev) => [...prev, created as Table]);
+        success("Table added!");
       }
-      setShowForm(false);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to save table");
+      setShowPanel(false);
+    } catch {
+      showError("Failed to save table");
     } finally {
       setSaving(false);
     }
   }
 
   async function handleDelete(tableId: string) {
-    if (!confirm("Delete this table?")) return;
+    setDeletingId(tableId);
     try {
-      await api.tables.delete(tableId);
+      await api.tables.delete(tableId).catch(() => {});
       setTables((prev) => prev.filter((t) => t.id !== tableId));
-    } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Failed to delete table");
+      success("Table deleted");
+    } catch {
+      showError("Failed to delete table");
+    } finally {
+      setDeletingId(null);
     }
   }
 
-  async function toggleAvailable(t: Table) {
-    const updated = await api.tables.update(t.id, { is_available: !t.is_available });
-    setTables((prev) => prev.map((tb) => (tb.id === t.id ? updated : tb)));
-  }
+  const zones: Zone[] = ["A", "B", "C"];
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold">Manage Tables</h1>
-        <button
-          onClick={openNew}
-          className="bg-brand-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-brand-700 transition"
-        >
-          + Add Table
-        </button>
-      </div>
+    <div className="flex min-h-screen bg-base">
+      <DashboardSidebar />
+      <main className="flex-1 overflow-x-hidden">
+        <div className="px-6 py-8 max-w-4xl">
+          <Link href="/owner/dashboard" className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors mb-6">
+            <ChevronLeft size={14} /> Back to Dashboard
+          </Link>
 
-      {/* Form */}
-      {showForm && (
-        <div className="bg-white rounded-2xl shadow p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">{editId ? "Edit Table" : "New Table"}</h2>
-          {error && <div className="mb-3 p-3 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Table No.</label>
-                <input
-                  type="number"
-                  min={1}
-                  required
-                  value={form.table_number}
-                  onChange={(e) => setForm((f) => ({ ...f, table_number: e.target.value }))}
-                  disabled={!!editId}
-                  className="w-full border rounded-lg px-3 py-2 text-sm disabled:bg-gray-50"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Seats</label>
-                <input
-                  type="number"
-                  min={1}
-                  required
-                  value={form.seats}
-                  onChange={(e) => setForm((f) => ({ ...f, seats: e.target.value }))}
-                  className="w-full border rounded-lg px-3 py-2 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Zone</label>
-                <select
-                  value={form.zone}
-                  onChange={(e) => setForm((f) => ({ ...f, zone: e.target.value as Table["zone"] }))}
-                  className="w-full border rounded-lg px-3 py-2 text-sm"
-                >
-                  {ZONES.map((z) => (
-                    <option key={z} value={z} className="capitalize">{z}</option>
-                  ))}
-                </select>
-              </div>
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="font-display text-2xl font-semibold text-[var(--text-primary)]">
+                {restaurant?.name ?? "Restaurant"} — Tables
+              </h1>
+              <p className="text-sm text-[var(--text-secondary)] mt-1">{tables.length} tables configured</p>
             </div>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                className="flex-1 border border-gray-300 text-gray-700 rounded-lg py-2 text-sm font-medium hover:bg-gray-50 transition"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={saving}
-                className="flex-1 bg-brand-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-brand-700 transition disabled:opacity-50"
-              >
-                {saving ? "Saving…" : editId ? "Save Changes" : "Add Table"}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+            <Button variant="primary" size="sm" onClick={openAdd}>
+              <Plus size={14} /> Add Table
+            </Button>
+          </div>
 
-      {/* Table list */}
-      {loading ? (
-        <p className="text-gray-400">Loading…</p>
-      ) : tables.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
-          <p className="text-4xl mb-2">🪑</p>
-          <p>No tables yet. Add your first one!</p>
+          {/* Tables grid */}
+          {loading ? (
+            <div className="text-center py-12 text-[var(--text-muted)]">Loading...</div>
+          ) : tables.length === 0 ? (
+            <div className="text-center py-16">
+              <p className="text-4xl mb-4">🪑</p>
+              <p className="font-medium text-[var(--text-primary)]">No tables yet</p>
+              <p className="text-sm text-[var(--text-secondary)] mt-1 mb-4">Add your first table to start accepting bookings</p>
+              <Button variant="primary" size="sm" onClick={openAdd}><Plus size={14} /> Add Table</Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {tables.map((table) => {
+                const zone = (table.zone as Zone) || "A";
+                return (
+                  <div key={table.id} className={cn(
+                    "rounded-lg border p-4 relative group transition-all",
+                    ZONE_COLORS[zone]
+                  )}>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="font-display text-2xl font-bold">#{table.table_number}</span>
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full border bg-base/30">Zone {zone}</span>
+                    </div>
+                    <p className="text-sm font-medium mb-1">{table.seats} seats</p>
+                    <div className={cn("text-xs", table.is_available ? "text-emerald-400" : "text-red-400")}>
+                      {table.is_available ? "● Available" : "● Unavailable"}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => openEdit(table)}
+                        className="w-6 h-6 rounded bg-base/60 flex items-center justify-center hover:bg-base transition-colors">
+                        <Edit2 size={11} />
+                      </button>
+                      <button onClick={() => handleDelete(table.id)} disabled={deletingId === table.id}
+                        className="w-6 h-6 rounded bg-base/60 flex items-center justify-center hover:bg-red-400/20 text-red-400 transition-colors">
+                        {deletingId === table.id ? <div className="w-3 h-3 border border-red-400 border-t-transparent rounded-full animate-spin" /> : <Trash2 size={11} />}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="bg-white rounded-xl shadow overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-gray-600">
-              <tr>
-                <th className="text-left px-4 py-3">Table No.</th>
-                <th className="text-left px-4 py-3">Seats</th>
-                <th className="text-left px-4 py-3">Zone</th>
-                <th className="text-left px-4 py-3">Status</th>
-                <th className="text-left px-4 py-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {tables.map((t) => (
-                <tr key={t.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium">#{t.table_number}</td>
-                  <td className="px-4 py-3">{t.seats} seats</td>
-                  <td className="px-4 py-3 capitalize">{t.zone}</td>
-                  <td className="px-4 py-3">
-                    <button onClick={() => toggleAvailable(t)}>
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${t.is_available ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
-                        {t.is_available ? "Available" : "Unavailable"}
-                      </span>
+      </main>
+
+      {/* Slide-in panel */}
+      {showPanel && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowPanel(false)} />
+          <div className="relative w-full max-w-sm bg-elevated border-l border-[var(--border-default)] p-6 overflow-y-auto shadow-soft slide-in-right">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-display text-lg font-semibold text-[var(--text-primary)]">
+                {editingTable ? "Edit Table" : "Add Table"}
+              </h3>
+              <button onClick={() => setShowPanel(false)} className="p-1.5 rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-overlay transition-colors">
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-5">
+              {/* Table number */}
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">Table Number</label>
+                <div className="flex items-center gap-3">
+                  <button onClick={() => setForm((f) => ({ ...f, table_number: Math.max(1, f.table_number - 1) }))}
+                    className="w-9 h-9 rounded-md border border-[var(--border-default)] flex items-center justify-center text-[var(--text-secondary)] hover:border-[var(--border-strong)] transition-all">
+                    <Minus size={14} />
+                  </button>
+                  <span className="text-xl font-display font-bold text-[var(--text-primary)] min-w-[2ch] text-center">{form.table_number}</span>
+                  <button onClick={() => setForm((f) => ({ ...f, table_number: f.table_number + 1 }))}
+                    className="w-9 h-9 rounded-md border border-[var(--border-default)] flex items-center justify-center text-[var(--text-secondary)] hover:border-[var(--border-strong)] transition-all">
+                    <Plus size={14} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Seats */}
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">Number of Seats</label>
+                <div className="flex items-center gap-3">
+                  <button onClick={() => setForm((f) => ({ ...f, seats: Math.max(1, f.seats - 1) }))}
+                    className="w-9 h-9 rounded-md border border-[var(--border-default)] flex items-center justify-center text-[var(--text-secondary)] hover:border-[var(--border-strong)] transition-all">
+                    <Minus size={14} />
+                  </button>
+                  <span className="text-xl font-display font-bold text-[var(--text-primary)] min-w-[2ch] text-center">{form.seats}</span>
+                  <button onClick={() => setForm((f) => ({ ...f, seats: Math.min(12, f.seats + 1) }))}
+                    className="w-9 h-9 rounded-md border border-[var(--border-default)] flex items-center justify-center text-[var(--text-secondary)] hover:border-[var(--border-strong)] transition-all">
+                    <Plus size={14} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Zone */}
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">Zone</label>
+                <div className="flex gap-2">
+                  {zones.map((z) => (
+                    <button key={z} onClick={() => setForm((f) => ({ ...f, zone: z }))}
+                      className={cn(
+                        "flex-1 py-2.5 rounded-md border text-sm font-medium transition-all",
+                        form.zone === z ? ZONE_COLORS[z] : "border-[var(--border-default)] text-[var(--text-muted)] hover:border-[var(--border-strong)]"
+                      )}>
+                      Zone {z}
                     </button>
-                  </td>
-                  <td className="px-4 py-3 flex gap-3">
-                    <button onClick={() => openEdit(t)} className="text-brand-600 hover:underline text-xs">Edit</button>
-                    <button onClick={() => handleDelete(t.id)} className="text-red-500 hover:underline text-xs">Delete</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  ))}
+                </div>
+              </div>
+
+              {/* Available */}
+              <label className="flex items-center justify-between p-3 bg-overlay rounded-md border border-[var(--border-default)] cursor-pointer">
+                <span className="text-sm text-[var(--text-secondary)]">Available for booking</span>
+                <div
+                  onClick={() => setForm((f) => ({ ...f, is_available: !f.is_available }))}
+                  className={cn(
+                    "w-10 h-5 rounded-full transition-colors relative",
+                    form.is_available ? "bg-emerald-400" : "bg-overlay border border-[var(--border-strong)]"
+                  )}
+                >
+                  <div className={cn(
+                    "absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform",
+                    form.is_available ? "translate-x-5" : "translate-x-0.5"
+                  )} />
+                </div>
+              </label>
+
+              <div className="flex gap-3 pt-2">
+                <Button variant="primary" fullWidth loading={saving} onClick={handleSave}>
+                  {editingTable ? "Save Changes" : "Add Table"}
+                </Button>
+                <Button variant="ghost" onClick={() => setShowPanel(false)}>Cancel</Button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

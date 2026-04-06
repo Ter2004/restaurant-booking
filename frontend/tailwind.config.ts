@@ -9,13 +9,25 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        brand: {
-          50:  "#fff7ed",
-          100: "#ffedd5",
-          500: "#f97316",
-          600: "#ea580c",
-          700: "#c2410c",
+        gold: {
+          DEFAULT: "#e8c97e",
+          dim: "#c9a84c",
+          light: "#f5e4b3",
         },
+        surface: "#111111",
+        elevated: "#1a1a1a",
+        overlay: "#222222",
+        base: "#0a0a0a",
+      },
+      fontFamily: {
+        display: ["Playfair Display", "Georgia", "serif"],
+        sans: ["DM Sans", "system-ui", "sans-serif"],
+        mono: ["JetBrains Mono", "Fira Code", "monospace"],
+      },
+      boxShadow: {
+        soft: "0 4px 24px rgba(0,0,0,0.4)",
+        glow: "0 0 40px rgba(232,201,126,0.15)",
+        "glow-sm": "0 0 20px rgba(232,201,126,0.10)",
       },
     },
   },

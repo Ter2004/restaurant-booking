@@ -90,8 +90,11 @@ export interface Restaurant {
   city: string;
   phone?: string;
   email?: string;
+  website?: string;
   image_url?: string;
   capacity: number;
+  rating?: number;
+  review_count?: number;
   opening_time: string;
   closing_time: string;
   open_days: string[];
