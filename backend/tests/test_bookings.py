@@ -36,7 +36,7 @@ def test_list_bookings_requires_auth(client):
 def test_create_booking_success(client):
     mock_db = MagicMock()
     # No conflict
-    mock_db.table.return_value.select.return_value.eq.return_value.eq.return_value.not_.return_value.in_.return_value.lt.return_value.gt.return_value.execute.return_value.data = []
+    mock_db.table.return_value.select.return_value.eq.return_value.eq.return_value.not_.in_.return_value.lt.return_value.gt.return_value.execute.return_value.data = []
     # Insert returns booking
     mock_db.table.return_value.insert.return_value.execute.return_value.data = [MOCK_BOOKING]
 
