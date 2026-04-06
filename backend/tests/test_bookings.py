@@ -35,6 +35,12 @@ def test_list_bookings_requires_auth(client):
 
 def test_create_booking_success(client):
     mock_db = MagicMock()
+
+    # Restaurant hours check — return opening/closing times
+    mock_restaurant_result = MagicMock()
+    mock_restaurant_result.data = {"opening_time": "09:00", "closing_time": "22:00"}
+    mock_db.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value = mock_restaurant_result
+
     # No conflict
     mock_db.table.return_value.select.return_value.eq.return_value.eq.return_value.not_.in_.return_value.lt.return_value.gt.return_value.execute.return_value.data = []
     # Insert returns booking
