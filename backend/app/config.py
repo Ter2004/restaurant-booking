@@ -1,5 +1,4 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import field_validator
 
 
 class Settings(BaseSettings):
@@ -8,22 +7,20 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_service_key: str = ""
     supabase_jwt_secret: str = ""
-    allowed_origins: list[str] = ["http://localhost:3000"]
+    # Store as string to avoid pydantic-settings JSON-parsing an empty env var.
+    # Use the `cors_origins` property to get the parsed list.
+    allowed_origins: str = "http://localhost:3000"
     app_env: str = "development"
 
-    @field_validator("allowed_origins", mode="before")
-    @classmethod
-    def parse_allowed_origins(cls, v: object) -> object:
-        if isinstance(v, str):
-            v = v.strip()
-            if not v:
-                return ["http://localhost:3000"]
-            # Accept comma-separated or JSON array
-            if v.startswith("["):
-                import json
-                return json.loads(v)
-            return [origin.strip() for origin in v.split(",")]
-        return v
+    @property
+    def cors_origins(self) -> list[str]:
+        value = self.allowed_origins.strip()
+        if not value:
+            return ["http://localhost:3000"]
+        if value.startswith("["):
+            import json
+            return json.loads(value)
+        return [o.strip() for o in value.split(",")]
 
     @property
     def is_production(self) -> bool:
