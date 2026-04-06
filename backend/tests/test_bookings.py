@@ -1,6 +1,4 @@
-import pytest
 from unittest.mock import MagicMock, patch
-from fastapi.testclient import TestClient
 
 from main import app
 from app.middleware.auth import get_current_user
