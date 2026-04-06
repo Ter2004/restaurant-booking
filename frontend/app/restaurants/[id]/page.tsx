@@ -2,16 +2,23 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 import { api, Restaurant, Review } from "@/lib/api";
 
 const STARS = [1, 2, 3, 4, 5];
 
 export default function RestaurantDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setIsLoggedIn(!!data.user));
+  }, []);
 
   useEffect(() => {
     Promise.all([api.restaurants.get(id), api.reviews.list(id)])
@@ -51,12 +58,21 @@ export default function RestaurantDetailPage() {
             <p className="text-yellow-500 font-medium mt-1">★ {avgRating} ({reviews.length} reviews)</p>
           )}
         </div>
-        <Link
-          href={`/customer/bookings/new?restaurant_id=${restaurant.id}`}
-          className="bg-brand-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-brand-700 transition whitespace-nowrap"
-        >
-          Book a Table
-        </Link>
+        {isLoggedIn ? (
+          <Link
+            href={`/customer/bookings/new?restaurant_id=${restaurant.id}`}
+            className="bg-brand-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-brand-700 transition whitespace-nowrap"
+          >
+            Book a Table
+          </Link>
+        ) : (
+          <button
+            onClick={() => router.push(`/auth/login?redirect=/restaurants/${restaurant.id}`)}
+            className="bg-brand-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-brand-700 transition whitespace-nowrap"
+          >
+            Book a Table
+          </button>
+        )}
       </div>
 
       {/* Info */}

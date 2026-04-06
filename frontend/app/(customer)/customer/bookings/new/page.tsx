@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 import { api, Restaurant, Table } from "@/lib/api";
 
 function NewBookingForm() {
@@ -24,14 +25,19 @@ function NewBookingForm() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data.user) {
+        router.push(`/auth/login?redirect=/customer/bookings/new${preselectedRestaurantId ? `?restaurant_id=${preselectedRestaurantId}` : ""}`);
+      }
+    });
     api.restaurants.list().then(setRestaurants);
-  }, []);
+  }, [router, preselectedRestaurantId]);
 
   useEffect(() => {
     if (form.restaurant_id) {
       api.tables.list(form.restaurant_id).then(setTables);
     }
-  }, [form.restaurant_id]);
+  }, [form.restaurant_id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const selectedRestaurant = restaurants.find((r) => r.id === form.restaurant_id);
 
