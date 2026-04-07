@@ -76,7 +76,7 @@ export default function LoginPage() {
             {[
               { value: "200+", label: "Restaurants" },
               { value: "50K+", label: "Bookings" },
-              { value: "4.9★", label: "Avg Rating" },
+              { value: "4.9", label: "Avg Rating" },
             ].map((stat) => (
               <div key={stat.label} className="text-center p-3 rounded-lg bg-elevated border border-[var(--border-subtle)]">
                 <div className="text-gold font-display text-xl font-semibold">{stat.value}</div>

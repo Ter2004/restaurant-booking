@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Check, Minus, Plus, ArrowLeft, ArrowRight, ChevronRight } from "lucide-react";
+import { Search, Check, CheckCircle, Minus, Plus, ArrowLeft, ArrowRight, ChevronRight } from "lucide-react";
 import { api } from "@/lib/api";
 import type { Restaurant, Table } from "@/types";
 import { mockRestaurants, mockTables } from "@/lib/mockData";
@@ -84,8 +84,8 @@ export default function NewBookingPage() {
         <DashboardSidebar />
         <main className="flex-1 flex items-center justify-center px-4">
           <div className="text-center slide-up max-w-sm">
-            <div className="w-20 h-20 rounded-full bg-emerald-400/10 border border-emerald-400/20 flex items-center justify-center mx-auto mb-6 text-4xl">
-              🎉
+            <div className="w-20 h-20 rounded-full bg-emerald-400/10 border border-emerald-400/20 flex items-center justify-center mx-auto mb-6">
+              <CheckCircle size={36} className="text-emerald-400" />
             </div>
             <h2 className="font-display text-2xl font-semibold text-[var(--text-primary)] mb-2">Booking Confirmed!</h2>
             <p className="text-sm text-[var(--text-secondary)] mb-4">Your table has been reserved successfully.</p>

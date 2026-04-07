@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Eye, EyeOff, UtensilsCrossed, Mail, Lock, User, ShoppingBag, Store } from "lucide-react";
+import { Eye, EyeOff, UtensilsCrossed, Mail, Lock, User, ShoppingBag, Store, Check } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -102,7 +102,7 @@ export default function RegisterPage() {
             ].map((item) => (
               <div key={item} className="flex items-center gap-3 text-sm text-[var(--text-secondary)]">
                 <div className="w-5 h-5 rounded-full bg-gold/20 border border-gold/30 flex items-center justify-center flex-shrink-0">
-                  <span className="text-gold text-xs">✓</span>
+                  <Check size={10} className="text-gold" />
                 </div>
                 {item}
               </div>
@@ -188,7 +188,7 @@ export default function RegisterPage() {
                     >
                       {selected && (
                         <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-gold flex items-center justify-center">
-                          <span className="text-base text-[8px] font-bold">✓</span>
+                          <Check size={10} className="text-base" />
                         </div>
                       )}
                       <Icon size={20} />

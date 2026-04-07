@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Star, Users, ArrowRight, Search, ChefHat, CalendarCheck, Smile } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { Star, Users, ArrowRight, Search, CalendarCheck, Smile } from "lucide-react";
 import { api } from "@/lib/api";
 import type { Restaurant } from "@/types";
-import { cuisineEmoji, cn } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import Button from "@/components/ui/Button";
@@ -16,15 +15,11 @@ const CUISINES = ["All", "Thai", "Japanese", "French", "Indian", "German", "Vega
 
 export default function HomePage() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeCuisine, setActiveCuisine] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setIsLoggedIn(!!data.user);
-    });
     api.restaurants.list()
       .then(setRestaurants)
       .catch(() => setRestaurants([]))
@@ -54,10 +49,10 @@ export default function HomePage() {
             {/* Category pills */}
             <div className="flex flex-wrap justify-center gap-2 mb-8">
               {[
-                { label: "🍣 Japanese", color: "bg-red-500/10 text-red-300 border-red-500/20" },
-                { label: "🍕 Italian", color: "bg-orange-500/10 text-orange-300 border-orange-500/20" },
-                { label: "🥩 Steakhouse", color: "bg-amber-500/10 text-amber-300 border-amber-500/20" },
-                { label: "🌿 Vegan", color: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20" },
+                { label: "Japanese", color: "bg-red-500/10 text-red-300 border-red-500/20" },
+                { label: "Italian", color: "bg-orange-500/10 text-orange-300 border-orange-500/20" },
+                { label: "Steakhouse", color: "bg-amber-500/10 text-amber-300 border-amber-500/20" },
+                { label: "Vegan", color: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20" },
               ].map((pill) => (
                 <span key={pill.label} className={cn("text-xs px-3 py-1.5 rounded-full border font-medium", pill.color)}>
                   {pill.label}
@@ -128,14 +123,13 @@ export default function HomePage() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-16 text-[var(--text-secondary)]">
-              <p className="text-4xl mb-4">🍽️</p>
               <p className="font-medium">No restaurants found</p>
               <p className="text-sm text-[var(--text-muted)] mt-1">Try a different filter or search term</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filtered.slice(0, 6).map((r) => (
-                <RestaurantCard key={r.id} restaurant={r} isLoggedIn={isLoggedIn} />
+                <RestaurantCard key={r.id} restaurant={r} />
               ))}
             </div>
           )}
@@ -188,19 +182,16 @@ export default function HomePage() {
   );
 }
 
-function RestaurantCard({ restaurant: r, isLoggedIn }: { restaurant: Restaurant; isLoggedIn: boolean }) {
-  const emoji = cuisineEmoji(r.cuisine_type);
+function RestaurantCard({ restaurant: r }: { restaurant: Restaurant }) {
 
   return (
     <Link href={`/restaurants/${r.id}`} className="group">
       <div className="bg-elevated border border-[var(--border-subtle)] rounded-lg overflow-hidden card-hover h-full flex flex-col">
         {/* Image */}
         <div className="relative h-48 bg-gradient-to-br from-overlay to-base flex items-center justify-center overflow-hidden">
-          {r.image_url ? (
+          {r.image_url && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={r.image_url} alt={r.name} className="w-full h-full object-cover" />
-          ) : (
-            <span className="text-6xl opacity-60 group-hover:scale-110 transition-transform duration-300">{emoji}</span>
           )}
           {/* Cuisine badge */}
           <div className="absolute top-3 left-3">

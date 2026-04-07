@@ -57,23 +57,6 @@ export function getInitials(name: string): string {
     .slice(0, 2);
 }
 
-export function cuisineEmoji(cuisine: string): string {
-  const map: Record<string, string> = {
-    Japanese: "🍣",
-    Italian: "🍕",
-    Thai: "🍜",
-    French: "🥐",
-    Indian: "🍛",
-    Chinese: "🥟",
-    Steakhouse: "🥩",
-    Vegan: "🌿",
-    German: "🍺",
-    Mexican: "🌮",
-    Mediterranean: "🫒",
-    Korean: "🫕",
-  };
-  return map[cuisine] ?? "🍽️";
-}
 
 export function relativeTime(dateStr: string): string {
   const date = new Date(dateStr);

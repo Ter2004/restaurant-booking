@@ -91,7 +91,7 @@ export default function AdminDashboardPage() {
                       "w-7 h-7 rounded-full flex items-center justify-center text-xs flex-shrink-0 mt-0.5",
                       activityColors[b.status as BookingStatus]
                     )}>
-                      {b.status === "confirmed" ? "✓" : b.status === "cancelled" ? "✗" : b.status === "completed" ? "★" : "○"}
+                      {b.status === "confirmed" ? "C" : b.status === "cancelled" ? "X" : b.status === "completed" ? "D" : "P"}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-[var(--text-primary)] leading-tight">

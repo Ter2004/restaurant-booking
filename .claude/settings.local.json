@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p \"frontend/app/\\(admin\\)/admin/dashboard\")",
+      "Bash(mv \"frontend/app/\\(admin\\)/dashboard/page.tsx\" \"frontend/app/\\(admin\\)/admin/dashboard/page.tsx\")",
+      "Bash(rmdir \"frontend/app/\\(admin\\)/dashboard\")",
+      "Bash(mkdir -p \"frontend/app/\\(customer\\)/customer/dashboard\")",
+      "Bash(mv \"frontend/app/\\(customer\\)/dashboard/page.tsx\" \"frontend/app/\\(customer\\)/customer/dashboard/page.tsx\")",
+      "Bash(docker compose:*)",
+      "Bash(gh run:*)",
+      "Bash(xargs ls:*)",
+      "Bash(git add:*)",
+      "Bash(npm install:*)",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(p.dependencies.next\\)\")",
+      "Bash(pip install:*)",
+      "Bash(pytest tests/ -v --tb=short)",
+      "Bash(python -m pytest tests/ -v --tb=short)",
+      "mcp__claude_ai_Supabase__list_tables",
+      "Bash(git commit -m ':*)",
+      "Bash(git push:*)",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)",
+      "Bash(npm list:*)",
+      "Bash(npx tsc:*)",
+      "Bash(python3 -c ':*)",
+      "Bash(node -e ':*)"
+    ]
+  }
+}

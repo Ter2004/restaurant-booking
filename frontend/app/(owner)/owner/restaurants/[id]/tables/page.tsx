@@ -130,7 +130,6 @@ export default function TablesPage() {
             <div className="text-center py-12 text-[var(--text-muted)]">Loading...</div>
           ) : tables.length === 0 ? (
             <div className="text-center py-16">
-              <p className="text-4xl mb-4">🪑</p>
               <p className="font-medium text-[var(--text-primary)]">No tables yet</p>
               <p className="text-sm text-[var(--text-secondary)] mt-1 mb-4">Add your first table to start accepting bookings</p>
               <Button variant="primary" size="sm" onClick={openAdd}><Plus size={14} /> Add Table</Button>

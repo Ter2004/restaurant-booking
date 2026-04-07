@@ -99,7 +99,6 @@ export default function OwnerDashboardPage() {
               <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <SkeletonRow key={i} />)}</div>
             ) : pending.length === 0 ? (
               <div className="bg-elevated border border-[var(--border-subtle)] rounded-lg p-8 text-center">
-                <p className="text-2xl mb-2">🎉</p>
                 <p className="text-sm font-medium text-[var(--text-primary)]">No pending bookings</p>
                 <p className="text-xs text-[var(--text-muted)] mt-1">All caught up!</p>
               </div>
@@ -142,7 +141,6 @@ export default function OwnerDashboardPage() {
             <h2 className="font-display text-lg font-semibold text-[var(--text-primary)] mb-4">My Restaurants</h2>
             {restaurants.length === 0 ? (
               <EmptyState
-                icon="🏪"
                 title="No restaurants yet"
                 description="Add your first restaurant to start accepting bookings"
                 action={{ label: "Add Restaurant", href: "/owner/restaurants/new" }}

@@ -74,7 +74,6 @@ export default function CustomerDashboardPage() {
               <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <SkeletonRow key={i} />)}</div>
             ) : upcoming.length === 0 ? (
               <EmptyState
-                icon="🍽️"
                 title="No upcoming bookings"
                 description="Find a restaurant and make your first reservation"
                 action={{ label: "Browse Restaurants", href: "/" }}
