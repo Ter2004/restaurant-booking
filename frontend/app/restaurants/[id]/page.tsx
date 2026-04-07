@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { api } from "@/lib/api";
 import type { Restaurant, Review, Table } from "@/types";
 import { mockRestaurants, mockReviews, mockTables } from "@/lib/mockData";
-import { cuisineEmoji, formatDate, formatTime, generateTimeSlots, cn } from "@/lib/utils";
+import { formatDate, formatTime, generateTimeSlots, cn } from "@/lib/utils";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import Button from "@/components/ui/Button";
@@ -102,19 +102,15 @@ export default function RestaurantDetailPage() {
 
   if (!restaurant) return null;
 
-  const emoji = cuisineEmoji(restaurant.cuisine_type);
-
   return (
     <>
       <Navbar />
       <main className="pt-16">
         {/* Hero banner */}
         <div className="relative h-72 bg-gradient-to-br from-overlay to-base flex items-center justify-center overflow-hidden">
-          {restaurant.image_url ? (
+          {restaurant.image_url && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={restaurant.image_url} alt={restaurant.name} className="absolute inset-0 w-full h-full object-cover opacity-40" />
-          ) : (
-            <span className="text-9xl opacity-20">{emoji}</span>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-base via-base/50 to-transparent" />
 

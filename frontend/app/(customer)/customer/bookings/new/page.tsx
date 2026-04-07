@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Check, CheckCircle, Minus, Plus, ArrowLeft, ArrowRight, ChevronRight } from "lucide-react";
+import { Search, Check, CheckCircle, Minus, Plus, ArrowLeft, ArrowRight, ChevronRight, Store } from "lucide-react";
 import { api } from "@/lib/api";
 import type { Restaurant, Table } from "@/types";
 import { mockRestaurants, mockTables } from "@/lib/mockData";
-import { cuisineEmoji, generateTimeSlots, formatTime, cn } from "@/lib/utils";
+import { generateTimeSlots, formatTime, cn } from "@/lib/utils";
 import DashboardSidebar from "@/components/layout/DashboardSidebar";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
@@ -164,7 +164,7 @@ export default function NewBookingPage() {
                         : "border-[var(--border-subtle)] bg-elevated hover:border-[var(--border-default)]"
                     )}
                   >
-                    <span className="text-3xl flex-shrink-0">{cuisineEmoji(r.cuisine_type)}</span>
+                    <span className="text-3xl flex-shrink-0 text-[var(--text-muted)]"><Store size={24} /></span>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-[var(--text-primary)]">{r.name}</p>
                       <p className="text-xs text-[var(--text-secondary)] mt-0.5">{r.cuisine_type} · {r.city}</p>
@@ -190,7 +190,7 @@ export default function NewBookingPage() {
           {step === 2 && selected && (
             <div className="page-enter space-y-6">
               <div className="flex items-center gap-3 p-4 bg-elevated border border-[var(--border-subtle)] rounded-lg">
-                <span className="text-2xl">{cuisineEmoji(selected.cuisine_type)}</span>
+                <Store size={20} className="text-[var(--text-muted)]" />
                 <div>
                   <p className="font-medium text-[var(--text-primary)]">{selected.name}</p>
                   <p className="text-xs text-[var(--text-secondary)]">{selected.cuisine_type} · {selected.city}</p>
