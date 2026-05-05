@@ -2,98 +2,140 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
-import { api, Booking } from "@/lib/api";
-import { useRouter } from "next/navigation";
+import { Calendar, Clock, Users, ChevronRight, Star, CalendarDays, CheckCircle2, XCircle, PlusCircle } from "lucide-react";
+import { api } from "@/lib/api";
+import type { Booking } from "@/types";
+import { mockBookings } from "@/lib/mockData";
+import { formatDateShort, formatTime, cn } from "@/lib/utils";
+import DashboardSidebar from "@/components/layout/DashboardSidebar";
+import Badge from "@/components/ui/Badge";
+import Button from "@/components/ui/Button";
+import EmptyState from "@/components/ui/EmptyState";
+import { SkeletonRow } from "@/components/ui/Skeleton";
+import type { BookingStatus } from "@/types";
 
-const STATUS_COLORS: Record<string, string> = {
-  pending:   "bg-yellow-100 text-yellow-800",
-  confirmed: "bg-green-100 text-green-800",
-  completed: "bg-blue-100 text-blue-800",
-  cancelled: "bg-gray-100 text-gray-500",
-};
-
-export default function CustomerDashboard() {
-  const router = useRouter();
+export default function CustomerDashboardPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userName, setUserName] = useState("");
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) { router.push("/auth/login"); return; }
-      setUserName(data.user.user_metadata?.full_name ?? data.user.email ?? "");
-    });
+    api.bookings.list()
+      .then(setBookings)
+      .catch(() => setBookings(mockBookings))
+      .finally(() => setLoading(false));
+  }, []);
 
-    api.bookings.list().then((data) => {
-      setBookings(data);
-      setLoading(false);
-    }).catch(() => setLoading(false));
-  }, [router]);
+  const upcoming = bookings.filter((b) => b.status === "pending" || b.status === "confirmed");
+  const past = bookings.filter((b) => b.status === "completed" || b.status === "cancelled");
 
-  async function handleCancel(id: string) {
-    if (!confirm("Cancel this booking?")) return;
-    await api.bookings.cancel(id);
-    setBookings((prev) =>
-      prev.map((b) => (b.id === id ? { ...b, status: "cancelled" } : b))
-    );
-  }
+  const stats = [
+    { label: "Total Bookings", value: bookings.length, icon: Calendar, color: "text-blue-400" },
+    { label: "Upcoming", value: upcoming.length, icon: CalendarDays, color: "text-gold" },
+    { label: "Completed", value: bookings.filter((b) => b.status === "completed").length, icon: CheckCircle2, color: "text-emerald-400" },
+    { label: "Cancelled", value: bookings.filter((b) => b.status === "cancelled").length, icon: XCircle, color: "text-red-400" },
+  ];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold">My Dashboard</h1>
-          <p className="text-gray-500 text-sm mt-1">Welcome back, {userName}</p>
-        </div>
-        <Link
-          href="/customer/bookings/new"
-          className="bg-brand-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-brand-700 transition"
-        >
-          + New Booking
-        </Link>
-      </div>
+    <div className="flex min-h-screen bg-base">
+      <DashboardSidebar />
+      <main className="flex-1 overflow-x-hidden">
+        <div className="px-6 py-8 max-w-5xl">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="font-display text-2xl font-semibold text-[var(--text-primary)]">My Dashboard</h1>
+              <p className="text-sm text-[var(--text-secondary)] mt-1">Manage your restaurant bookings</p>
+            </div>
+            <Link href="/customer/bookings/new">
+              <Button variant="primary" size="sm"><PlusCircle size={14} /> New Booking</Button>
+            </Link>
+          </div>
 
-      <h2 className="text-lg font-semibold mb-4">My Bookings</h2>
+          {/* Stats */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {stats.map((stat) => {
+              const Icon = stat.icon;
+              return (
+                <div key={stat.label} className="bg-elevated border border-[var(--border-subtle)] rounded-lg p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs text-[var(--text-muted)]">{stat.label}</span>
+                    <Icon size={16} className={stat.color} />
+                  </div>
+                  <p className="text-3xl font-display font-bold text-[var(--text-primary)]">{stat.value}</p>
+                </div>
+              );
+            })}
+          </div>
 
-      {loading ? (
-        <p className="text-gray-400">Loading…</p>
-      ) : bookings.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
-          <p className="text-4xl mb-2">📅</p>
-          <p>No bookings yet. Start by booking a restaurant!</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {bookings.map((b) => (
-            <div key={b.id} className="bg-white rounded-xl shadow p-5 flex items-center justify-between gap-4">
-              <div>
-                <p className="font-medium">{b.booking_date} · {b.start_time} – {b.end_time}</p>
-                <p className="text-sm text-gray-500">Party of {b.party_size}</p>
-                {b.special_requests && (
-                  <p className="text-xs text-gray-400 mt-1">Note: {b.special_requests}</p>
-                )}
+          {/* Upcoming bookings */}
+          <div className="mb-8">
+            <h2 className="font-display text-lg font-semibold text-[var(--text-primary)] mb-4">Upcoming Bookings</h2>
+            {loading ? (
+              <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <SkeletonRow key={i} />)}</div>
+            ) : upcoming.length === 0 ? (
+              <EmptyState
+                title="No upcoming bookings"
+                description="Find a restaurant and make your first reservation"
+                action={{ label: "Browse Restaurants", href: "/" }}
+              />
+            ) : (
+              <div className="space-y-3">
+                {upcoming.map((b) => <BookingCard key={b.id} booking={b} />)}
               </div>
-              <div className="flex items-center gap-3">
-                <span className={`text-xs px-2 py-1 rounded-full font-medium ${STATUS_COLORS[b.status]}`}>
-                  {b.status}
-                </span>
-                <Link href={`/customer/bookings/${b.id}`} className="text-xs text-brand-600 hover:underline">
-                  View
-                </Link>
-                {b.status === "pending" && (
-                  <button
-                    onClick={() => handleCancel(b.id)}
-                    className="text-xs text-red-500 hover:underline"
-                  >
-                    Cancel
-                  </button>
-                )}
+            )}
+          </div>
+
+          {/* Past bookings */}
+          {past.length > 0 && (
+            <div>
+              <h2 className="font-display text-lg font-semibold text-[var(--text-primary)] mb-4">Past Bookings</h2>
+              <div className="space-y-3">
+                {past.slice(0, 5).map((b) => <BookingCard key={b.id} booking={b} />)}
               </div>
             </div>
-          ))}
+          )}
         </div>
-      )}
+      </main>
+    </div>
+  );
+}
+
+function BookingCard({ booking: b }: { booking: Booking }) {
+  const { day, month } = formatDateShort(b.booking_date);
+
+  return (
+    <div className="bg-elevated border border-[var(--border-subtle)] rounded-lg p-4 flex items-center gap-4 card-hover">
+      {/* Date block */}
+      <div className="w-14 h-14 rounded-lg bg-gold/10 border border-gold/20 flex flex-col items-center justify-center flex-shrink-0">
+        <span className="text-xl font-display font-bold text-gold leading-none">{day}</span>
+        <span className="text-[10px] font-medium text-gold/70 mt-0.5">{month}</span>
+      </div>
+
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <p className="font-medium text-[var(--text-primary)] truncate">{b.restaurant?.name ?? "Restaurant"}</p>
+        <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-[var(--text-secondary)]">
+          <span className="flex items-center gap-1"><Clock size={11} />{formatTime(b.start_time)}</span>
+          <span className="flex items-center gap-1"><Users size={11} />{b.party_size} guests</span>
+          {b.table && <span>Table #{b.table.table_number}</span>}
+        </div>
+      </div>
+
+      {/* Right */}
+      <div className="flex items-center gap-3 flex-shrink-0">
+        <Badge variant={b.status as BookingStatus}>{b.status}</Badge>
+        <Link href={`/customer/bookings/${b.id}`}>
+          <div className="flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-gold transition-colors">
+            {b.status === "completed" ? (
+              <><Star size={11} /> Review</>
+            ) : b.status !== "cancelled" ? (
+              <>Details <ChevronRight size={11} /></>
+            ) : (
+              <>View <ChevronRight size={11} /></>
+            )}
+          </div>
+        </Link>
+      </div>
     </div>
   );
 }

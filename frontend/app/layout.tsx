@@ -1,22 +1,38 @@
 import type { Metadata } from "next";
+import { Playfair_Display, DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
+import { ToastProvider } from "@/components/ui/Toast";
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-playfair",
+  display: "swap",
+});
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-dm-sans",
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "Restaurant Booking",
-  description: "Find and book the best restaurants in your city",
+  title: "TableReserve — Reserve Your Perfect Table",
+  description: "Discover curated restaurants and book instantly. Premium dining reservations, made simple.",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className="min-h-screen bg-gray-50 text-gray-900 antialiased">
-        <Navbar />
-        {children}
+    <html lang="en" className={`${playfair.variable} ${dmSans.variable} ${jetbrainsMono.variable}`}>
+      <body className="min-h-screen bg-base text-[var(--text-primary)] antialiased font-sans">
+        <ToastProvider>
+          {children}
+        </ToastProvider>
       </body>
     </html>
   );
