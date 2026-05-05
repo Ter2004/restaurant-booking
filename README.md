@@ -162,9 +162,12 @@ Commit format: [Conventional Commits](https://www.conventionalcommits.org/)
 
 ## Team Members
 
-| Name | GitHub | Role |
-|------|--------|------|
-| Kittinantantajina | [@Ter2004](https://github.com/Ter2004) | Full Stack / DevOps |
+| Name | Student ID | Role |
+|------|------------|------|
+| Kittinan Tantajina | 6630613029 | Lead Developer & DevOps / Cloud Engineer |
+| Paramet Keawpool | 6630613033 | Frontend Developer |
+| Komen Nitchaphon | 6630613042 | Backend Developer & API Tester |
+| Sutthirak Piyangkon | 6630613041 | Project Manager & Release / Maintenance Manager |
 
 ## License
 
